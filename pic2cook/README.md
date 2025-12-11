@@ -5,6 +5,10 @@
 ## Architecture Diagram
 
 ```mermaid
+---
+config:
+  theme: "neutral"
+---
 flowchart TB
     subgraph Users["User"]
         Browser["Browser"]
@@ -20,6 +24,7 @@ flowchart TB
         subgraph CloudRun["Cloud Run"]
             WebService["pic2cook-web<br/>Next.js"]
             APIService["pic2cook-api<br/>FastAPI"]
+            WorkerService["pic2cook-worker<br/>Python"]
         end
 
         subgraph VPCNetwork["VPC Network"]
@@ -69,17 +74,22 @@ flowchart TB
     %% Backend logic
     APIService -.->|Direct VPC Egress| PostgreSQL
     APIService -.->|Direct VPC Egress| Redis
+    WorkerService -.->|Direct VPC Egress| PostgreSQL
+    WorkerService -.->|Direct VPC Egress| Redis
 
-    APIService --> VisionAPI
-    APIService --> Gemini
-    APIService --> Imagen
     APIService --> Embeddings
+
+    WorkerService --> VisionAPI
+    WorkerService --> Gemini
+    WorkerService --> Imagen
 
     %% Storage & Secrets
     APIService --> GCS
+    WorkerService --> GCS
     WebService --> GCS
     SecretManager -.->|Mount| WebService
     SecretManager -.->|Mount| APIService
+    SecretManager -.->|Mount| WorkerService
 
     %% CI/CD
     GitHub --> ArtifactRegistry
