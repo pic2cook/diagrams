@@ -189,8 +189,33 @@ sequenceDiagram
 ### Backend (Python/FastAPI)
 | Library | Constraint |
 | :--- | :--- |
+| alembic | >=1.14.0 |
+| asyncpg | >=0.30.0 |
+| authlib | >=1.4.0 |
 | fastapi | >=0.121.3 |
-| uvicorn[standard | latest |
+| google-auth | >=2.36.0 |
+| google-cloud-aiplatform | >=1.73.0 |
+| google-cloud-storage | >=2.19.0 |
+| google-cloud-vision | >=3.9.0 |
+| google-genai | >=1.52.0 |
+| google-generativeai | >=0.8.3 |
+| httpx | >=0.28.0 |
+| minio | >=7.2.0 |
+| openai | >=1.55.0 |
+| passlib[bcrypt] | >=1.7.4 |
+| pgvector | >=0.3.0 |
+| pillow | >=11.0.0 |
+| psycopg2-binary | >=2.9.11 |
+| pydantic-settings | >=2.7.0 |
+| pydantic[email] | >=2.10.0 |
+| python-jose[cryptography] | >=3.3.0 |
+| python-multipart | >=0.0.20 |
+| redis | >=7.1.0 |
+| scalar-fastapi | >=1.4.4 |
+| slowapi | >=0.1.9 |
+| sqlalchemy[asyncio] | >=2.0.0 |
+| sse-starlette | >=3.0.3 |
+| uvicorn[standard] | >=0.38.0 |
 
 ### Frontend (Node.js/Next.js)
 | Package | Version |
