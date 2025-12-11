@@ -258,6 +258,7 @@ sequenceDiagram
 | canvas-confetti | ^1.9.4 |
 | class-variance-authority | ^0.7.1 |
 | clsx | ^2.1.1 |
+| embla-carousel-react | ^8.6.0 |
 | es-toolkit | ^1.42.0 |
 | import-in-the-middle | ^2.0.0 |
 | jotai-devtools | ^0.13.0 |
