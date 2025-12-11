@@ -38,7 +38,7 @@ flowchart TB
             SecretManager["Secret Manager<br/>(Secrets)"]
         end
 
-        subgraph AI["AI Services"]
+        subgraph AI["AIaaS"]
             subgraph VertexAI["Vertex AI"]
                 Gemini["Gemini 2.5 Flash<br/>(Recipe Generation)"]
                 Imagen["Imagen 4 Ultra<br/>(Image Generation)"]
