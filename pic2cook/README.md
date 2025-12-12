@@ -24,7 +24,10 @@ flowchart TB
         subgraph CloudRun["Cloud Run"]
             WebService["pic2cook-web<br/>Next.js"]
             APIService["pic2cook-api<br/>FastAPI"]
-            WorkerService["pic2cook-worker<br/>Python"]
+            subgraph Workers["Workers"]
+                AnalysisWorker["Analysis Worker<br/>Python"]
+                ShowcaseWorker["Showcase Worker<br/>Python"]
+            end
         end
 
         subgraph VPCNetwork["VPC Network"]
@@ -74,22 +77,26 @@ flowchart TB
     %% Backend logic
     APIService -.->|Direct VPC Egress| PostgreSQL
     APIService -.->|Direct VPC Egress| Redis
-    WorkerService -.->|Direct VPC Egress| PostgreSQL
-    WorkerService -.->|Direct VPC Egress| Redis
+    AnalysisWorker -.->|Direct VPC Egress| PostgreSQL
+    AnalysisWorker -.->|Direct VPC Egress| Redis
+    ShowcaseWorker -.->|Direct VPC Egress| PostgreSQL
+    ShowcaseWorker -.->|Direct VPC Egress| Redis
 
     APIService --> Embeddings
 
-    WorkerService --> VisionAPI
-    WorkerService --> Gemini
-    WorkerService --> Imagen
+    AnalysisWorker --> VisionAPI
+    AnalysisWorker --> Gemini
+    ShowcaseWorker --> Gemini
+    ShowcaseWorker --> Imagen
 
     %% Storage & Secrets
     APIService --> GCS
-    WorkerService --> GCS
+    AnalysisWorker --> GCS
+    ShowcaseWorker --> GCS
     WebService --> GCS
     SecretManager -.->|Mount| WebService
     SecretManager -.->|Mount| APIService
-    SecretManager -.->|Mount| WorkerService
+    SecretManager -.->|Mount| Workers
 
     %% CI/CD
     GitHub --> ArtifactRegistry
@@ -107,6 +114,7 @@ sequenceDiagram
     participant API as API Server (FastAPI)
     participant Redis as Redis (JobQueue & PubSub)
     participant Worker as Analysis Worker
+    participant Showcase as Showcase Worker
     participant Vision as Vision API
     participant Gemini as Vertex AI (Gemini)
     participant GCS as Cloud Storage
@@ -159,20 +167,15 @@ sequenceDiagram
     Redis-->>API: Pub/Sub Message (Recipe Structuring)
     API-->>Web: SSE Event (Recipe Structuring)
 
-    Worker->>Gemini: Generate Showcase Image (If enabled)
-    activate Gemini
-    Gemini-->>Worker: Image Base64
-    deactivate Gemini
-    
-    Worker->>GCS: Upload Showcase Image
-    activate GCS
-    GCS-->>Worker: URL
-    deactivate GCS
-    
     Worker->>DB: Save Recipe
     activate DB
     DB-->>Worker: Recipe ID
     deactivate DB
+
+    Worker->>Redis: Enqueue Showcase Job
+    activate Redis
+    Redis-->>Worker: OK
+    deactivate Redis
 
     Worker->>Redis: Update Job (Succeeded)
     deactivate Worker
@@ -182,6 +185,25 @@ sequenceDiagram
     deactivate API
 
     Web->>Web: Redirect to /recipes/{recipe_id}
+
+    Note over Showcase, Gemini: Async Background Process
+    Showcase->>Redis: Dequeue Showcase Job
+    activate Showcase
+    Showcase->>Gemini: Generate Showcase Image
+    activate Gemini
+    Gemini-->>Showcase: Image Base64
+    deactivate Gemini
+    
+    Showcase->>GCS: Upload Showcase Image
+    activate GCS
+    GCS-->>Showcase: URL
+    deactivate GCS
+    
+    Showcase->>DB: Update Recipe (showcase_url)
+    activate DB
+    DB-->>Showcase: OK
+    deactivate DB
+    deactivate Showcase
 ```
 
 ## Project Dependencies (Auto-generated)
@@ -202,7 +224,6 @@ sequenceDiagram
 | google-generativeai | >=0.8.3 |
 | httpx | >=0.28.0 |
 | minio | >=7.2.0 |
-| openai | >=1.55.0 |
 | passlib[bcrypt] | >=1.7.4 |
 | pgvector | >=0.3.0 |
 | pillow | >=11.0.0 |
@@ -211,11 +232,13 @@ sequenceDiagram
 | pydantic[email] | >=2.10.0 |
 | python-jose[cryptography] | >=3.3.0 |
 | python-multipart | >=0.0.20 |
-| redis | >=7.1.0 |
+| redis | >=6.0.0,<7.1.0 |
 | scalar-fastapi | >=1.4.4 |
 | slowapi | >=0.1.9 |
 | sqlalchemy[asyncio] | >=2.0.0 |
 | sse-starlette | >=3.0.3 |
+| taskiq-redis | >=1.2.0 |
+| taskiq | >=0.11.0 |
 | uvicorn[standard] | >=0.38.0 |
 
 ### Frontend (Node.js/Next.js)
@@ -249,8 +272,8 @@ sequenceDiagram
 | @t3-oss/env-nextjs | ^0.13.8 |
 | @tabler/icons-react | ^3.35.0 |
 | @tanstack/react-devtools | ^0.8.4 |
-| @tanstack/react-form-devtools | ^0.2.5 |
-| @tanstack/react-form | ^1.27.2 |
+| @tanstack/react-form-devtools | ^0.2.6 |
+| @tanstack/react-form | ^1.27.3 |
 | @tanstack/react-query-devtools | ^5.91.1 |
 | @tanstack/react-query | ^5.90.12 |
 | ahooks | ^3.9.6 |
@@ -267,13 +290,13 @@ sequenceDiagram
 | jotai-location | ^0.6.2 |
 | jotai | ^2.16.0 |
 | luxon | ^3.7.2 |
-| motion | ^12.23.25 |
+| motion | ^12.23.26 |
 | next-intl | ^4.5.8 |
-| next | ^16.0.8 |
-| react-dom | ^19.2.1 |
+| next | ^16.0.10 |
+| react-dom | ^19.2.3 |
 | react-icons | ^5.5.0 |
 | react-markdown | ^10.1.0 |
-| react | ^19.2.1 |
+| react | ^19.2.3 |
 | remark-gfm | ^4.0.1 |
 | require-in-the-middle | ^8.0.1 |
 | serwist | ^10.0.0-preview.14 |
