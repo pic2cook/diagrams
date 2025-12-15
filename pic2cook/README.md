@@ -2,6 +2,14 @@
 
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/) [![Node](https://img.shields.io/badge/node-24-green.svg?logo=nodedotjs&logoColor=white)](https://nodejs.org/) [![Last Commit](https://img.shields.io/github/last-commit/pic2cook/diagrams/main?path=pic2cook%2FREADME.md&label=last%20updated&logo=github&logoColor=white)](https://github.com/pic2cook/diagrams/blob/main/pic2cook/README.md)
 
+## Deployment
+
+This project uses Google Cloud Platform (Cloud Run, Cloud SQL, Cloud Tasks).
+
+For detailed instructions on deploying the **Worker Service**, please refer to [Worker Deployment Guide](docs/worker_deployment.md).
+
+### Basic Deployment Steps
+
 ## Architecture Diagram
 
 ```mermaid
@@ -24,20 +32,19 @@ flowchart TB
         subgraph CloudRun["Cloud Run"]
             WebService["pic2cook-web<br/>Next.js"]
             APIService["pic2cook-api<br/>FastAPI"]
-            subgraph Workers["Workers"]
-                AnalysisWorker["Analysis Worker<br/>Python"]
-                ShowcaseWorker["Showcase Worker<br/>Python"]
-            end
+            WorkerService["pic2cook-worker<br/>FastAPI"]
         end
 
         subgraph VPCNetwork["VPC Network"]
             subgraph CloudSQL["Cloud SQL"]
                 PostgreSQL[("PostgreSQL<br/>Private IP")]
             end
+        end
 
-            subgraph Memorystore["Memorystore"]
-                Redis[("Redis<br/>Private IP")]
-            end
+        subgraph Middleware["Async & Realtime"]
+            CloudTasks["Cloud Tasks<br/>(Job Queues)"]
+            PubSub["Cloud Pub/Sub<br/>(Events)"]
+            Firestore["Firestore<br/>(Job Status)"]
         end
 
         subgraph Storage["Storage"]
@@ -76,27 +83,31 @@ flowchart TB
 
     %% Backend logic
     APIService -.->|Direct VPC Egress| PostgreSQL
-    APIService -.->|Direct VPC Egress| Redis
-    AnalysisWorker -.->|Direct VPC Egress| PostgreSQL
-    AnalysisWorker -.->|Direct VPC Egress| Redis
-    ShowcaseWorker -.->|Direct VPC Egress| PostgreSQL
-    ShowcaseWorker -.->|Direct VPC Egress| Redis
+    APIService -->|Enqueue| CloudTasks
+    APIService -->|Read| Firestore
+
+    CloudTasks -->|HTTP Push| WorkerService
+    WorkerService -.->|Direct VPC Egress| PostgreSQL
+    WorkerService --> Firestore
+    WorkerService --> PubSub
+
+    %% Realtime
+    PubSub -.->|Pull/Push| APIService
+    APIService -.->|SSE| Browser
 
     APIService --> Embeddings
 
-    AnalysisWorker --> VisionAPI
-    AnalysisWorker --> Gemini
-    ShowcaseWorker --> Gemini
-    ShowcaseWorker --> Imagen
+    WorkerService --> VisionAPI
+    WorkerService --> Gemini
+    WorkerService --> Imagen
 
     %% Storage & Secrets
     APIService --> GCS
-    AnalysisWorker --> GCS
-    ShowcaseWorker --> GCS
+    WorkerService --> GCS
     WebService --> GCS
     SecretManager -.->|Mount| WebService
     SecretManager -.->|Mount| APIService
-    SecretManager -.->|Mount| Workers
+    SecretManager -.->|Mount| WorkerService
 
     %% CI/CD
     GitHub --> ArtifactRegistry
@@ -112,9 +123,10 @@ sequenceDiagram
     actor User
     participant Web as Web Client (Next.js)
     participant API as API Server (FastAPI)
-    participant Redis as Redis (JobQueue & PubSub)
-    participant Worker as Analysis Worker
-    participant Showcase as Showcase Worker
+    participant Tasks as Cloud Tasks
+    participant Firestore as Firestore (Status)
+    participant Worker as Worker Service
+    participant PubSub as Pub/Sub (Events)
     participant Vision as Vision API
     participant Gemini as Vertex AI (Gemini)
     participant GCS as Cloud Storage
@@ -129,10 +141,11 @@ sequenceDiagram
     GCS-->>API: Image URL
     deactivate GCS
 
-    API->>Redis: Create Job (Pending) & Enqueue
-    activate Redis
-    Redis-->>API: OK
-    deactivate Redis
+    API->>Firestore: Create Job (Queued)
+    API->>Tasks: Enqueue Analysis Job
+    activate Tasks
+    Tasks-->>API: OK
+    deactivate Tasks
 
     API-->>Web: Returns job_id
     deactivate API
@@ -140,22 +153,18 @@ sequenceDiagram
     Web->>API: GET /api/analysis/sse?job_id={job_id}
     activate API
     Note right of Web: Subscribes to Server-Sent Events
-
-    API->>Redis: Subscribe to job channel
     
-    Worker->>Redis: Dequeue Job
+    Tasks->>Worker: POST /jobs/analysis
     activate Worker
     
-    Worker->>Redis: Update Job (Processing)
-    Redis-->>API: Pub/Sub Message (Processing)
-    API-->>Web: SSE Event (Processing)
-
+    Worker->>Firestore: Update Job (Processing)
+    
     par Vision Analysis (If enabled)
             Worker->>Vision: Analyze Image
             activate Vision
             Vision-->>Worker: Labels & Confidence
             deactivate Vision
-            Worker->>Redis: Update Job (Vision Done)
+            Worker->>Firestore: Update Job (Vision Done)
     and Gemini Analysis
             Worker->>Gemini: Analyze Food & Generate Recipe
             activate Gemini
@@ -163,47 +172,47 @@ sequenceDiagram
             deactivate Gemini
     end
 
-    Worker->>Redis: Update Job (Recipe Structuring)
-    Redis-->>API: Pub/Sub Message (Recipe Structuring)
-    API-->>Web: SSE Event (Recipe Structuring)
-
+    Worker->>Firestore: Update Job (Recipe Structuring/Localizing)
+    
     Worker->>DB: Save Recipe
     activate DB
     DB-->>Worker: Recipe ID
     deactivate DB
 
-    Worker->>Redis: Enqueue Showcase Job
-    activate Redis
-    Redis-->>Worker: OK
-    deactivate Redis
+    Worker->>Tasks: Enqueue Showcase Job
+    activate Tasks
+    Tasks-->>Worker: OK
+    deactivate Tasks
 
-    Worker->>Redis: Update Job (Succeeded)
+    Worker->>Firestore: Update Job (Succeeded, Recipe ID)
+    Worker->>PubSub: Publish Event (Succeeded)
     deactivate Worker
-
-    Redis-->>API: Pub/Sub Message (Succeeded)
-    API-->>Web: SSE Event (Completed, recipe_id)
+    
+    Note right of PubSub: API listens to PubSub & sends SSE
+    PubSub-->>API: Event (Succeeded)
+    API-->>Web: SSE Event (Completed)
     deactivate API
 
     Web->>Web: Redirect to /recipes/{recipe_id}
 
-    Note over Showcase, Gemini: Async Background Process
-    Showcase->>Redis: Dequeue Showcase Job
-    activate Showcase
-    Showcase->>Gemini: Generate Showcase Image
+    Note over Worker, Gemini: Async Showcase Process
+    Tasks->>Worker: POST /jobs/showcase
+    activate Worker
+    Worker->>Gemini: Generate Showcase Image
     activate Gemini
-    Gemini-->>Showcase: Image Base64
+    Gemini-->>Worker: Image Base64
     deactivate Gemini
     
-    Showcase->>GCS: Upload Showcase Image
+    Worker->>GCS: Upload Showcase Image
     activate GCS
-    GCS-->>Showcase: URL
+    GCS-->>Worker: URL
     deactivate GCS
     
-    Showcase->>DB: Update Recipe (showcase_url)
+    Worker->>DB: Update Recipe (showcase_url)
     activate DB
-    DB-->>Showcase: OK
+    DB-->>Worker: OK
     deactivate DB
-    deactivate Showcase
+    deactivate Worker
 ```
 
 ## Project Dependencies (Auto-generated)
@@ -218,27 +227,28 @@ sequenceDiagram
 | fastapi | >=0.121.3 |
 | google-auth | >=2.36.0 |
 | google-cloud-aiplatform | >=1.73.0 |
+| google-cloud-firestore | >=2.14.0 |
+| google-cloud-pubsub | >=2.19.0 |
 | google-cloud-storage | >=2.19.0 |
+| google-cloud-tasks | >=2.20.0 |
 | google-cloud-vision | >=3.9.0 |
-| google-genai | >=1.52.0 |
 | google-generativeai | >=0.8.3 |
 | httpx | >=0.28.0 |
 | minio | >=7.2.0 |
+| openai | >=1.55.0 |
 | passlib[bcrypt] | >=1.7.4 |
 | pgvector | >=0.3.0 |
 | pillow | >=11.0.0 |
 | psycopg2-binary | >=2.9.11 |
+| psycopg[binary] | >=3.3.2 |
 | pydantic-settings | >=2.7.0 |
 | pydantic[email] | >=2.10.0 |
 | python-jose[cryptography] | >=3.3.0 |
 | python-multipart | >=0.0.20 |
-| redis | >=6.0.0,<7.1.0 |
 | scalar-fastapi | >=1.4.4 |
 | slowapi | >=0.1.9 |
 | sqlalchemy[asyncio] | >=2.0.0 |
 | sse-starlette | >=3.0.3 |
-| taskiq-redis | >=1.2.0 |
-| taskiq | >=0.11.0 |
 | uvicorn[standard] | >=0.38.0 |
 
 ### Frontend (Node.js/Next.js)
