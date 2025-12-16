@@ -312,4 +312,5 @@ sequenceDiagram
 | serwist | ^10.0.0-preview.14 |
 | sonner | ^2.0.7 |
 | tailwind-merge | ^3.4.0 |
+| vaul | ^1.1.2 |
 | zod | ^4.2.0 |
