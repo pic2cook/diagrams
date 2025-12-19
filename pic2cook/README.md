@@ -234,6 +234,7 @@ sequenceDiagram
 | google-cloud-vision | >=3.9.0 |
 | google-generativeai | >=0.8.3 |
 | httpx | >=0.28.0 |
+| json-repair | >=0.54.3 |
 | minio | >=7.2.0 |
 | openai | >=1.55.0 |
 | passlib[bcrypt] | >=1.7.4 |
