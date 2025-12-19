@@ -296,6 +296,7 @@ sequenceDiagram
 | canvas-confetti | ^1.9.4 |
 | class-variance-authority | ^0.7.1 |
 | clsx | ^2.1.1 |
+| cmdk | ^1.1.1 |
 | embla-carousel-react | ^8.6.0 |
 | es-toolkit | ^1.43.0 |
 | heic-to | ^1.3.0 |
