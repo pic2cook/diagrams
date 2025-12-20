@@ -282,6 +282,7 @@ sequenceDiagram
 | @radix-ui/react-toggle-group | ^1.1.11 |
 | @radix-ui/react-toggle | ^1.1.10 |
 | @radix-ui/react-tooltip | ^1.2.8 |
+| @serwist/next | ^9.2.3 |
 | @serwist/turbopack | ^10.0.0-preview.14 |
 | @t3-oss/env-nextjs | ^0.13.10 |
 | @tabler/icons-react | ^3.36.0 |
