@@ -19,7 +19,7 @@ config:
 ---
 flowchart TB
     subgraph Users["User"]
-        Browser["Browser"]
+        Browser["Browser<br/>(PWA)"]
     end
 
     subgraph GCP["Google Cloud Platform"]
@@ -39,6 +39,8 @@ flowchart TB
             subgraph CloudSQL["Cloud SQL"]
                 PostgreSQL[("PostgreSQL<br/>Private IP")]
             end
+            CloudRouter["Cloud Router"]
+            CloudNAT["Cloud NAT"]
         end
 
         subgraph Middleware["Async & Realtime"]
@@ -56,7 +58,6 @@ flowchart TB
         subgraph AI["AIaaS"]
             subgraph VertexAI["Vertex AI"]
                 Gemini["Gemini 2.5 Flash<br/>(Recipe Generation)"]
-                Imagen["Imagen 4 Ultra<br/>(Image Generation)"]
                 Embeddings["text-multilingual-embedding-002<br/>(Semantic Search)"]
             end
             VisionAPI["Vision API<br/>(Food Detection)"]
@@ -66,6 +67,10 @@ flowchart TB
             WorkloadIdentity["Workload Identity Federation"]
             ServiceAccount["Service Account"]
         end
+    end
+
+    subgraph External["External Services"]
+        WebPush["Web Push<br/>(VAPID/FCM)"]
     end
 
     subgraph CICD["CI/CD"]
@@ -81,6 +86,10 @@ flowchart TB
     %% Service to Service (Internal)
     WebService <-->|Authenticated<br/>Internal Call| APIService
 
+    %% VPC Network Flow
+    CloudRouter --> CloudNAT
+    CloudNAT -.->|Internet Egress| External
+
     %% Backend logic
     APIService -.->|Direct VPC Egress| PostgreSQL
     APIService -->|Enqueue| CloudTasks
@@ -91,15 +100,16 @@ flowchart TB
     WorkerService --> Firestore
     WorkerService --> PubSub
 
-    %% Realtime
+    %% Realtime & Push
     PubSub -.->|Pull/Push| APIService
     APIService -.->|SSE| Browser
+    WorkerService -->|Send| WebPush
+    WebPush -.->|Push Notification| Browser
 
     APIService --> Embeddings
 
     WorkerService --> VisionAPI
     WorkerService --> Gemini
-    WorkerService --> Imagen
 
     %% Storage & Secrets
     APIService --> GCS
