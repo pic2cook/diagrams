@@ -281,6 +281,7 @@ sequenceDiagram
 | @radix-ui/react-separator | ^1.1.8 |
 | @radix-ui/react-slider | ^1.3.6 |
 | @radix-ui/react-slot | ^1.2.4 |
+| @radix-ui/react-switch | ^1.2.6 |
 | @radix-ui/react-toggle-group | ^1.1.11 |
 | @radix-ui/react-toggle | ^1.1.10 |
 | @radix-ui/react-tooltip | ^1.2.8 |
