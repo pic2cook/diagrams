@@ -52,7 +52,7 @@ flowchart TB
         subgraph Storage["Storage"]
             GCS["Cloud Storage"]
             ArtifactRegistry["Artifact Registry"]
-            SecretManager["Secret Manager<br/>(Secrets)"]
+
         end
 
         subgraph AI["AIaaS"]
@@ -71,6 +71,7 @@ flowchart TB
 
     subgraph External["External Services"]
         WebPush["Web Push<br/>(VAPID/FCM)"]
+        Infisical["Infisical<br/>(Secrets)"]
     end
 
     subgraph CICD["CI/CD"]
@@ -115,9 +116,9 @@ flowchart TB
     APIService --> GCS
     WorkerService --> GCS
     WebService --> GCS
-    SecretManager -.->|Mount| WebService
-    SecretManager -.->|Mount| APIService
-    SecretManager -.->|Mount| WorkerService
+    Infisical -.->|Inject| WebService
+    Infisical -.->|Inject| APIService
+    Infisical -.->|Inject| WorkerService
 
     %% CI/CD
     GitHub --> ArtifactRegistry
