@@ -226,7 +226,7 @@ sequenceDiagram
     deactivate Worker
 ```
 
-## Project Dependencies (Auto-generated)
+## Project Dependencies
 
 ### Backend (Python/FastAPI)
 | Library | Constraint |
