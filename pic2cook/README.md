@@ -312,6 +312,7 @@ sequenceDiagram
 | class-variance-authority | ^0.7.1 |
 | clsx | ^2.1.1 |
 | cmdk | ^1.1.1 |
+| driver.js | ^1.4.0 |
 | embla-carousel-react | ^8.6.0 |
 | es-toolkit | ^1.43.0 |
 | heic-to | ^1.3.0 |
