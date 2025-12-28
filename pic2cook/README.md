@@ -271,6 +271,7 @@ sequenceDiagram
 | :--- | :--- |
 | @google-cloud/opentelemetry-cloud-trace-exporter | ^3.0.0 |
 | @microsoft/clarity | ^1.0.2 |
+| @monaco-editor/react | ^4.7.0 |
 | @opentelemetry/api | ^1.9.0 |
 | @opentelemetry/instrumentation-fetch | ^0.208.0 |
 | @opentelemetry/instrumentation-http | ^0.208.0 |
