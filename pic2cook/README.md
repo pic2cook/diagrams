@@ -337,3 +337,30 @@ sequenceDiagram
 | ua-parser-js | ^2.0.7 |
 | vaul | ^1.1.2 |
 | zod | ^4.2.1 |
+
+### Mobile (Flutter)
+| Package | Version |
+| :--- | :--- |
+| cached_network_image | ^3.4.1 |
+| cupertino_icons | ^1.0.8 |
+| dio | ^5.9.0 |
+| firebase_core | ^4.3.0 |
+| firebase_messaging | ^16.1.0 |
+| flutter | Flutter SDK |
+| flutter_facebook_auth | ^7.1.2 |
+| flutter_local_notifications | ^19.5.0 |
+| flutter_localizations | Flutter SDK |
+| flutter_riverpod | ^3.1.0 |
+| flutter_secure_storage | ^10.0.0 |
+| forui | ^0.17.0 |
+| freezed_annotation | ^3.1.0 |
+| get_it | ^9.2.0 |
+| go_router | ^17.0.1 |
+| google_sign_in | ^7.2.0 |
+| image_picker | ^1.2.1 |
+| injectable | ^2.7.1 |
+| intl | ^0.20.2 |
+| json_annotation | ^4.9.0 |
+| pretty_dio_logger | ^1.4.0 |
+| retrofit | ^4.9.2 |
+| riverpod_annotation | ^4.0.0 |
