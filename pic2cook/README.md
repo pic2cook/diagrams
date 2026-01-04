@@ -364,5 +364,7 @@ sequenceDiagram
 | json_annotation | ^4.9.0 |
 | pretty_dio_logger | ^1.4.0 |
 | retrofit | ^4.9.2 |
+| riverpod | ^3.1.0 |
 | riverpod_annotation | ^4.0.0 |
+| share_plus | ^12.0.1 |
 | video_player | ^2.10.1 |
