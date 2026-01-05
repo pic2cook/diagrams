@@ -346,6 +346,7 @@ sequenceDiagram
 | firebase_core | ^4.3.0 |
 | firebase_messaging | ^16.1.0 |
 | flutter | Flutter SDK |
+| flutter_animate | ^4.5.2 |
 | flutter_facebook_auth | ^7.1.2 |
 | flutter_local_notifications | ^19.5.0 |
 | flutter_localizations | Flutter SDK |
