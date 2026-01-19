@@ -309,6 +309,7 @@ sequenceDiagram
 | ahooks | ^3.9.6 |
 | axios | ^1.13.2 |
 | better-auth | ^1.4.13 |
+| browser-image-compression | ^2.0.2 |
 | canvas-confetti | ^1.9.4 |
 | class-variance-authority | ^0.7.1 |
 | clsx | ^2.1.1 |
