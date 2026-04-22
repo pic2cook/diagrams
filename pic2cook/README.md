@@ -375,5 +375,7 @@ sequenceDiagram
 | riverpod | ^3.1.0 |
 | riverpod_annotation | ^4.0.0 |
 | share_plus | ^12.0.1 |
+| upgrader | ^11.3.0 |
 | url_launcher | ^6.3.2 |
 | video_player | ^2.10.1 |
+| webview_flutter | ^4.12.0 |
